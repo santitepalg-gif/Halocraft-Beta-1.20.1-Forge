@@ -1,0 +1,50 @@
+
+name: Compilar Mod Halo - Forge 1.20.1
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Dar permisos a Gradle Wrapper
+        run: chmod +x gradlew
+        if: ${{ hashFiles('gradlew') != '' }}
+
+      - name: Compilar mod
+        run: |
+          if [ -f ./gradlew ]; then
+            ./gradlew build --no-daemon
+          elif [ -f ./gradlew.bat ]; then
+            echo "Se necesita el archivo gradlew para compilar en Linux."
+            exit 1
+          else
+            echo "ERROR: No existe gradlew en la raiz del proyecto."
+            exit 1
+          fi
+
+      - name: Subir archivo JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: Halo-Mod-Forge-1.20.1
+          path: build/libs/*.jar
+          if-no-files-found: error
